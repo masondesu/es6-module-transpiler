@@ -31,7 +31,7 @@
     "prepublish": "grunt build && grunt test"
   },
   "devDependencies": {
-    "es6ify": "~0.2.0",
+    "es6ify": "~0.4.8",
     "esprima": "git://github.com/thomasboyt/esprima#4be906f1abcbb",
     "grunt": "~0.4.1",
     "grunt-browserify": "~1.2.0",
