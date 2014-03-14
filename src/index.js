@@ -1,16 +1,10 @@
-var Compiler = require('./compiler');
+require('../lib/traceur-runtime');
 
-var AbstractCompiler = require('./abstract_compiler');
-var AmdCompiler = require('./amd_compiler');
-var YuiCompiler = require('./yui_compiler');
-var CjsCompiler = require('./cjs_compiler');
-var SourceModifier = require('./source_modifier');
+var Rewriter = require('./rewriter');
 
 module.exports = {
-  Compiler: Compiler,
-  AbstractCompiler: AbstractCompiler,
-  AmdCompiler: AmdCompiler,
-  YuiCompiler: YuiCompiler,
-  CjsCompiler: CjsCompiler,
-  SourceModifier: SourceModifier
+  toCJS: function(src) {
+    var rewriter = new Rewriter(src);
+    return rewriter.rewrite();
+  }
 };
