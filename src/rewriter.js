@@ -14,7 +14,7 @@ class Rewriter {
     var src = opts.src;
     this.moduleName = opts.name;
 
-    this.ast = esprima.parse(src);
+    this.ast = esprima.parse(src, {comments: true});
 
     // a mapping of imported modules to their unique identifiers
     // i.e. `./a` -> `__import_0__`
@@ -35,12 +35,27 @@ class Rewriter {
 
   insertPreamble() {
     this.ast.body.unshift(
-      /*b.ifStatement(
+      // if (!__es6_registry__) { __es6_registry__ = {}; }
+      //
+      // this boilerplate should be CJS/non-browser only, up to build step to prefix otherwise
+      // (or maybe just option passed to compiler {ensureRegistryExists: true}
+      b.ifStatement(
         b.unaryExpression(
           '!',
           b.identifier(REGISTRY_NAME)
         ),
-        ),*/
+        b.blockStatement([
+          b.expressionStatement(
+            b.assignmentExpression(
+              '=',
+              b.identifier(REGISTRY_NAME),
+              b.objectExpression([])
+            )
+          )
+        ])
+      ),
+
+      // var __es6_module__ = {};
       b.variableDeclaration(
         'var',
         [b.variableDeclarator(
