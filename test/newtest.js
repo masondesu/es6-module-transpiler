@@ -1,3 +1,9 @@
 var transpiler = require('../dist');
-var out = transpiler.toCJS('import foo from "bar"; function foobar() { console.log(foo); }');
-console.log(out);
+var fs = require('fs');
+var inA = fs.readFileSync('./features/scope_check.es6.js');
+
+var out = transpiler.toCJS({
+  src: inA,
+  name: 'scope_check'
+});
+console.log(out.code);
