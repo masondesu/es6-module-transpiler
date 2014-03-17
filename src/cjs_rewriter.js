@@ -83,10 +83,18 @@ class CJSRewriter extends Rewriter {
       replacement = b.variableDeclaration('var', [
         b.variableDeclarator(
           b.identifier(this.importedModuleIdentifiers[source]),
-          b.callExpression(
-            b.identifier('require'), [
-              b.literal(source)
-            ]
+          b.logicalExpression(
+            '||',
+            b.memberExpression(
+              b.identifier(REGISTRY_NAME),
+              b.literal(this.resolvePath(source)),
+              true
+            ),
+            b.callExpression(
+              b.identifier('require'), [
+                b.literal(source)
+              ]
+            )
           )
         )]
       );

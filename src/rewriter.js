@@ -1,5 +1,6 @@
 var esprima = require('esprima');
-var recast = require("recast");
+var recast = require('recast');
+var path = require('path');
 
 var n = recast.types.namedTypes;
 var b = recast.types.builders;
@@ -12,6 +13,7 @@ class Rewriter {
 
     this.registryName = opts.registryName;
     this.moduleName = opts.moduleName;
+    this.dirPath = opts.dirPath;  // used to resolve relative imports
 
     this.ast = esprima.parse(src, {comments: true});
 
@@ -101,6 +103,13 @@ class Rewriter {
     });
 
     return recast.print(this.ast);
+  }
+
+  resolvePath(filename) {
+    if ( !this.dirPath ) {
+      return filename;
+    }
+    return path.join(this.dirPath, filename);
   }
 }
 

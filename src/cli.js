@@ -33,6 +33,10 @@ let opts = require('nomnom')
       help: 'Specify the module\'s name for the global registry, as well as for AMD/YUI named modules. Otherwise, a name inferred from the path (minus the extension) is used for the registry name, and AMD/YUI modules wll be anonymous.',
       metavar: 'NAME'
     },
+    'namespace': {
+      help: 'A namespace to prepend to registry and module names, whether inferred or explicit.',
+      metavar: 'NAME'
+    },
     'infer-name': {
       help: 'Use the path-inferred name for AMD/YUI module names (not just their registry names).',
       flag: true
@@ -73,7 +77,7 @@ function processFile(filename) {
 }
 
 function inferName(filename) {
-  var ext = path.extname(filename);
+  let ext = path.extname(filename);
   return filename.slice(0, filename.length - ext.length);
 }
 
@@ -82,13 +86,18 @@ let files = _.flatten(opts.path.map(processPath));
 for (let filename of files) {
   let src = fs.readFileSync(filename, 'utf8');
 
-  var inferredName = inferName(filename);
-  var output = transpile(src, opts.type, {
+  let inferredName = inferName(filename);
+  if ( opts.namespace ) {
+    inferredName = path.join(opts.namespace, inferredName);
+  }
+
+  let output = transpile(src, opts.type, {
     registryName: opts.name || inferredName,
-    moduleName: opts['infer-name'] === true ? inferredName : opts.name
+    moduleName: opts['infer-name'] === true ? inferredName : opts.name,
+    dirPath: path.dirname(filename)
   });
 
-  var outPath = path.join(opts.dest, filename);
+  let outPath = path.join(opts.dest, filename);
   require('mkdirp').sync(path.dirname(outPath));
   fs.writeFileSync(outPath, output.code);
 }
