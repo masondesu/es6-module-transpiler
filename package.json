@@ -32,7 +32,7 @@
     "prepublish": "gulp build && grunt test"
   },
   "devDependencies": {
-    "esprima": "git://github.com/thomasboyt/esprima#4be906f1abcbb",
+    "esprima": "git://github.com/jgable/esprima#4d49c123721b22ef452e8ab574eb3e465c3c5cf0",
     "grunt": "~0.4.1",
     "grunt-simple-mocha": "~0.4.0",
     "matchdep": "~0.1.2",

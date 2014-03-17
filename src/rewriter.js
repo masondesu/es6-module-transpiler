@@ -40,9 +40,13 @@ class Rewriter {
       // this boilerplate should be CJS/non-browser only, up to build step to prefix otherwise
       // (or maybe just option passed to compiler {ensureRegistryExists: true}
       b.ifStatement(
-        b.unaryExpression(
-          '!',
-          b.identifier(REGISTRY_NAME)
+        b.binaryExpression(
+          '===',
+          b.unaryExpression(
+            'typeof',
+            b.identifier(REGISTRY_NAME)
+          ),
+          b.literal('undefined')
         ),
         b.blockStatement([
           b.expressionStatement(
@@ -125,18 +129,15 @@ class Rewriter {
     if ( !this.importedModules[source] ) {
 
       // replace w/ __es6_modules__['name'] = require('name');
-      replacement = b.expressionStatement(
-        b.assignmentExpression(
-          '=',
-          // left
+      replacement = b.variableDeclaration('var', [
+        b.variableDeclarator(
           b.identifier(this.importedModuleIdentifiers[source]),
-          // right
           b.callExpression(
             b.identifier('require'), [
               b.literal(source)
             ]
           )
-        )
+        )]
       );
 
       this.importedModules[source] = true;
@@ -158,14 +159,24 @@ class Rewriter {
   }
 
   replaceExportDeclaration(node) {
-    var declaration = node.declaration;
+    // TODO: generalize for multiple declarations:
+    // export var foo = 1, bar = 2;
+    var declaration = node.declaration[0];
+    var exportName = declaration.id.name;
+
+    // TODO: there are so many other cases here, lol
+    if (n.VariableDeclarator.check(declaration)) {
+      if (declaration.id.name === 'default') {
+        declaration = declaration.init;
+      }
+    }
 
     return b.expressionStatement(
       b.assignmentExpression(
         '=',
         b.memberExpression(
           b.identifier(MODULE_OBJECT_NAME),
-          b.identifier(declaration.id.name),
+          b.identifier(exportName),
           false
         ),
         declaration
@@ -193,7 +204,7 @@ class Rewriter {
           // if REDECLARED don't use
           // redclared == scope != global scope?
           var scope = this.scope.lookup(node.name);
-          if ( scope.depth === 0 ) {
+          if ( !scope ) {
             replacement = rewriter.replaceImportedIdentfier(rewriter.identifiers[node.name]);
           }
         }
