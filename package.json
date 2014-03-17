@@ -12,7 +12,7 @@
   ],
   "bugs": "https://github.com/square/es6-module-transpiler/issues",
   "bin": {
-    "compile-modules": "./bin/compile-modules"
+    "es6-module-transpiler": "./src/cli"
   },
   "directories": {
     "src": "./src"
@@ -23,16 +23,17 @@
     "url": "https://github.com/square/es6-module-transpiler.git"
   },
   "dependencies": {
-    "optimist": "~0.3.5",
-    "through": "~2.3.4",
-    "escope": "~1.0.1"
+    "esprima": "git://github.com/jgable/esprima#4d49c123721b22ef452e8ab574eb3e465c3c5cf0",
+    "recast": "~0.5.9",
+    "nomnom": "~1.6.2",
+    "underscore": "~1.6.0",
+    "mkdirp": "~0.3.5"
   },
   "scripts": {
     "test": "gulp build && grunt test",
     "prepublish": "gulp build && grunt test"
   },
   "devDependencies": {
-    "esprima": "git://github.com/jgable/esprima#4d49c123721b22ef452e8ab574eb3e465c3c5cf0",
     "grunt": "~0.4.1",
     "grunt-simple-mocha": "~0.4.0",
     "matchdep": "~0.1.2",
@@ -43,7 +44,6 @@
     "gulp-clean": "~0.2.4",
     "gulp-mocha": "~0.4.1",
     "gulp-header": "~1.0.2",
-    "gulp-rename": "~1.1.0",
-    "recast": "~0.5.9"
+    "gulp-rename": "~1.1.0"
   }
 }

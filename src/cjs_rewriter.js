@@ -57,7 +57,7 @@ class CJSRewriter extends Rewriter {
           '=',
           b.memberExpression(
             b.identifier(REGISTRY_NAME),
-            b.literal(this.moduleName),
+            b.literal(this.registryName),
             true
           ),
           b.assignmentExpression(

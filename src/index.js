@@ -1,15 +1,19 @@
 require('../lib/traceur-runtime');
 
-var CJSRewriter = require('./cjs_rewriter');
-var AMDRewriter = require('./amd_rewriter');
+var rewriters = {
+  cjs: require('./cjs_rewriter'),
+  amd: require('./amd_rewriter')
+};
 
 module.exports = {
-  toCJS: function(src) {
-    var rewriter = new CJSRewriter(src);
-    return rewriter.rewrite();
-  },
-  toAMD: function(src) {
-    var rewriter = new AMDRewriter(src);
-    return rewriter.rewrite();
+  transpile: function(src, type, opts) {
+    var Rewriter = rewriters[type];
+    if ( !Rewriter ) {
+      /* jshint ignore:start */
+      throw new Error(`No transpiler found for type ${type}!`);
+      /* jshint ignore:end */
+    }
+
+    return new Rewriter(src, opts).rewrite();
   }
 };

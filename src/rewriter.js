@@ -5,9 +5,13 @@ var n = recast.types.namedTypes;
 var b = recast.types.builders;
 
 class Rewriter {
-  constructor(opts) {
-    var src = opts.src;
-    this.moduleName = opts.name;
+  constructor(src, opts) {
+    if ( !opts.registryName ) {
+      throw new Error('You must pass a registryName to use');
+    }
+
+    this.registryName = opts.registryName;
+    this.moduleName = opts.moduleName;
 
     this.ast = esprima.parse(src, {comments: true});
 
