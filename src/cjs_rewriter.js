@@ -120,13 +120,14 @@ class CJSRewriter extends Rewriter {
       }
     }
 
+    var isDefault = exportName === 'default';
     return b.expressionStatement(
       b.assignmentExpression(
         '=',
         b.memberExpression(
           b.identifier(MODULE_OBJECT_NAME),
-          b.identifier(exportName),
-          false
+          isDefault ? b.literal(exportName) : b.identifier(exportName),
+          isDefault ? true : false
         ),
         declaration
       )
