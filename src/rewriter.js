@@ -201,10 +201,11 @@ class Rewriter {
       } else if ( n.Identifier.check(node) ) {
         if ( node.name in rewriter.identifiers ) {
 
-          // if REDECLARED don't use
-          // redclared == scope != global scope?
+          // if redeclared, don't rewrite
           var scope = this.scope.lookup(node.name);
-          if ( !scope ) {
+
+          // scope === null is true because at this point we've removed the "declaring" import
+          if ( scope === null ) {
             replacement = rewriter.replaceImportedIdentfier(rewriter.identifiers[node.name]);
           }
         }

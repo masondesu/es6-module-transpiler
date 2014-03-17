@@ -20,7 +20,3 @@ function bar() {
 
 // but this should!
 console.log(odd);
-
-// and this should not
-function odd() {
-}
