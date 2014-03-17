@@ -34,6 +34,16 @@ class Rewriter {
     this.importCounter = 0;
   }
 
+  trackModule(node) {
+    var source = node.source.value;
+
+    if ( this.importedModuleIdentifiers[source] === undefined ) {
+      var identifier = `__imports_${this.importCounter}__`;
+      this.importedModuleIdentifiers[source] = identifier;
+      this.importCounter += 1;
+    }
+  }
+
   /* Add each imported specifier to this.identifiers */
   trackImport(node, specifier) {
     var alias = (specifier.name || specifier.id).name;
@@ -45,15 +55,6 @@ class Rewriter {
     }
 
     var source = node.source.value;
-
-    // Give the imported module a unique name if it doesn't have one yet
-    // (break into trackModule() ?)
-    if ( this.importedModuleIdentifiers[source] === undefined ) {
-      var identifier = `__imports_${this.importCounter}__`;
-      this.importedModuleIdentifiers[source] = identifier;
-      this.importCounter += 1;
-    }
-
     this.identifiers[alias] = {
       name: importName,
       importIdentifier: this.importedModuleIdentifiers[source]
@@ -80,6 +81,7 @@ class Rewriter {
 
       if ( n.ImportDeclaration.check(node) ) {
         var source = node.source.value;
+        rewriter.trackModule(node);
         node.specifiers.forEach(rewriter.trackImport.bind(rewriter, node));
         replacement = rewriter.replaceImportDeclaration(source);
       } else if ( n.ExportDeclaration.check(node) ) {

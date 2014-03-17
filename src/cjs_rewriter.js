@@ -79,7 +79,7 @@ class CJSRewriter extends Rewriter {
 
     if ( !this.importedModules[source] ) {
 
-      // replace w/ __es6_modules__['name'] = require('name');
+      // replace w/ __import_0__ = __es6_module_registry__['name'] || require('name');
       replacement = b.variableDeclaration('var', [
         b.variableDeclarator(
           b.identifier(this.importedModuleIdentifiers[source]),
