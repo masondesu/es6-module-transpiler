@@ -100,38 +100,104 @@ class CJSRewriter extends Rewriter {
       );
 
       this.importedModules[source] = true;
-    } else {
-      replacement = null;
     }
 
     return replacement;
   }
 
-  replaceExportDeclaration(node) {
-    // TODO: generalize for multiple declarations:
-    // export var foo = 1, bar = 2;
-    var declaration = node.declaration[0];
-    var exportName = declaration.id.name;
+  replaceExportSpecifiers(node) {
 
-    // TODO: there are so many other cases here, lol
+    var import_, importIdentifier, rightHand;
+    if ( node.source ) {
+      // reexport
+      this.trackModule(node.source);
+      import_ = this.replaceImportDeclaration(node.source.value);
+      importIdentifier = import_.declarations[0].id.name;
+    }
+
+    var replacement = node.specifiers.map(function(specifier) {
+      if (importIdentifier) {
+        rightHand = b.memberExpression(
+          b.identifier(importIdentifier),
+          b.identifier(specifier.id.name),
+          false
+        );
+      } else {
+        rightHand = b.identifier(specifier.id.name);
+      }
+
+      return b.expressionStatement(
+        b.assignmentExpression(
+          '=',
+          b.memberExpression(
+            b.identifier(MODULE_OBJECT_NAME),
+            b.identifier(specifier.id.name),
+            false
+          ),
+          rightHand
+        )
+      );
+    });
+
+    return [import_].concat(replacement);
+  }
+
+  exportIdentifier(exportName) {
+    var isDefault = exportName === 'default';
+
+    return b.memberExpression(
+      b.identifier(MODULE_OBJECT_NAME),
+      isDefault ? b.literal(exportName) : b.identifier(exportName),
+      isDefault ? true : false
+    );
+  }
+
+  replaceExportDeclaration(declaration) {
+
+    // For some reason, export default always wraps declaration in an array
+    if ( Array.isArray(declaration) ) {
+      declaration = declaration[0];
+    }
+
+    // TODO: This is really ugly, kinda tricky to follow :\
     if (n.VariableDeclarator.check(declaration)) {
       if (declaration.id.name === 'default') {
-        declaration = declaration.init;
+        // export default foo;
+        return b.expressionStatement(
+          b.assignmentExpression(
+            '=',
+            this.exportIdentifier(declaration.id.name),
+            declaration.init
+          )
+        );
+      } else {
+        // export var [foo = 1], foo = 2;
+        // (called recursively from VariableDeclaration)
+        return b.expressionStatement(
+          b.assignmentExpression(
+            '=',
+            this.exportIdentifier(declaration.id.name),
+            b.identifier(declaration.id.name)
+          )
+        );
+      }
+    } else if (n.Declaration.check(declaration)) {
+      if ( declaration.declarations ) {
+        // export var foo = 1, foo = 2...;
+        var decs = declaration.declarations.map(this.replaceExportDeclaration.bind(this));
+        return [declaration].concat(decs);
+      } else {
+        // export function foo() {};
+        return [declaration, b.expressionStatement(
+          b.assignmentExpression(
+            '=',
+            this.exportIdentifier(declaration.id.name),
+            b.identifier(declaration.id.name)
+          )
+        )];
       }
     }
 
-    var isDefault = exportName === 'default';
-    return b.expressionStatement(
-      b.assignmentExpression(
-        '=',
-        b.memberExpression(
-          b.identifier(MODULE_OBJECT_NAME),
-          isDefault ? b.literal(exportName) : b.identifier(exportName),
-          isDefault ? true : false
-        ),
-        declaration
-      )
-    );
   }
 }
 

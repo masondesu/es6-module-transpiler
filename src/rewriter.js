@@ -35,7 +35,7 @@ class Rewriter {
   }
 
   trackModule(node) {
-    var source = node.source.value;
+    var source = node.value;
 
     if ( this.importedModuleIdentifiers[source] === undefined ) {
       var identifier = `__imports_${this.importCounter}__`;
@@ -78,29 +78,35 @@ class Rewriter {
 
     recast.types.traverse(this.ast, function(node) {
       var replacement;
+      this.scope.scan();  // always track scope, otherwise things get weird
 
       if ( n.ImportDeclaration.check(node) ) {
         var source = node.source.value;
-        rewriter.trackModule(node);
+        rewriter.trackModule(node.source);
         node.specifiers.forEach(rewriter.trackImport.bind(rewriter, node));
         replacement = rewriter.replaceImportDeclaration(source);
       } else if ( n.ExportDeclaration.check(node) ) {
-        replacement = rewriter.replaceExportDeclaration(node);
+        if ( node.declaration ) {
+          replacement = rewriter.replaceExportDeclaration(node.declaration);
+        } else if ( node.specifiers ) {
+          replacement = rewriter.replaceExportSpecifiers(node);
+        }
       } else if ( n.Identifier.check(node) ) {
         if ( node.name in rewriter.identifiers ) {
-
-          // if redeclared, don't rewrite
           var scope = this.scope.lookup(node.name);
 
-          // scope === null is true because at this point we've removed the "declaring" import
-          if ( scope === null ) {
+          if ( scope.depth === 0 ) {
             replacement = rewriter.replaceImportedIdentfier(rewriter.identifiers[node.name]);
           }
         }
       }
 
       if ( replacement !== undefined ) {
-        this.replace(replacement);
+        if ( Array.isArray(replacement) ) {
+          this.replace.apply(this, replacement);
+        } else {
+          this.replace(replacement);
+        }
       }
     });
 
