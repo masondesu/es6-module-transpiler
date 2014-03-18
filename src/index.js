@@ -2,7 +2,8 @@ require('../lib/traceur-runtime');
 
 var rewriters = {
   cjs: require('./cjs_rewriter'),
-  amd: require('./amd_rewriter')
+  amd: require('./amd_rewriter'),
+  yui: require('./yui_rewriter')
 };
 
 module.exports = {
