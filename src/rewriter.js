@@ -27,7 +27,7 @@ class Rewriter {
     // a mapping of imported identifiers to their original name and module
     // identifier
     // `import {a as b} from "foo" ->
-    // { b: { name: a, moduleIdentifier: __import_0__ }}
+    // { b: { name: a, moduleIdentifier: __import_0__, isModuleInstance: true|undefined }}
     this.identifiers = {};
 
     // used to generate __import_n__ identifiers
@@ -38,7 +38,9 @@ class Rewriter {
     var source = node.value;
 
     if ( this.importedModuleIdentifiers[source] === undefined ) {
+      /* jshint ignore:start */
       var identifier = `__imports_${this.importCounter}__`;
+      /* jshint ignore:end */
       this.importedModuleIdentifiers[source] = identifier;
       this.importCounter += 1;
     }
@@ -54,14 +56,26 @@ class Rewriter {
       importName = specifier.id.name;
     }
 
-    var source = node.source.value;
     this.identifiers[alias] = {
       name: importName,
-      importIdentifier: this.importedModuleIdentifiers[source]
+      importIdentifier: this.importedModuleIdentifiers[node.source.value]
     };
   }
 
-  replaceImportedIdentfier(identifier) {
+  trackModuleInstance(node) {
+    var alias = node.id.name;
+
+    this.identifiers[alias] = {
+      isModuleInstance: true,
+      importIdentifier: this.importedModuleIdentifiers[node.source.value]
+    };
+  }
+
+  replaceImportedIdentifier(identifier) {
+    if ( identifier.isModuleInstance ) {
+      return b.identifier(identifier.importIdentifier);
+    }
+
     var isDefault = identifier.name === 'default';
 
     return b.memberExpression(
@@ -81,24 +95,31 @@ class Rewriter {
       this.scope.scan();  // always track scope, otherwise things get weird
 
       if ( n.ImportDeclaration.check(node) ) {
-        var source = node.source.value;
         rewriter.trackModule(node.source);
         node.specifiers.forEach(rewriter.trackImport.bind(rewriter, node));
-        replacement = rewriter.replaceImportDeclaration(source);
+        replacement = rewriter.replaceImportDeclaration(node.source.value);
+
       } else if ( n.ExportDeclaration.check(node) ) {
         if ( node.declaration ) {
           replacement = rewriter.replaceExportDeclaration(node.declaration);
         } else if ( node.specifiers ) {
           replacement = rewriter.replaceExportSpecifiers(node);
         }
+
+      } else if ( n.ModuleDeclaration.check(node) ) {
+        rewriter.trackModule(node.source);
+        rewriter.trackModuleInstance(node);
+        replacement = rewriter.replaceImportDeclaration(node.source.value);
+
       } else if ( n.Identifier.check(node) ) {
         if ( node.name in rewriter.identifiers ) {
           var scope = this.scope.lookup(node.name);
 
           if ( scope.depth === 0 ) {
-            replacement = rewriter.replaceImportedIdentfier(rewriter.identifiers[node.name]);
+            replacement = rewriter.replaceImportedIdentifier(rewriter.identifiers[node.name]);
           }
         }
+
       }
 
       if ( replacement !== undefined ) {

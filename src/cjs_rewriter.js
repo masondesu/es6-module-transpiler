@@ -75,7 +75,7 @@ class CJSRewriter extends Rewriter {
   }
 
   replaceImportDeclaration(source) {
-    var replacement = null;
+    var replacement;
 
     if ( !this.importedModules[source] ) {
 
@@ -100,6 +100,9 @@ class CJSRewriter extends Rewriter {
       );
 
       this.importedModules[source] = true;
+    } else {
+      // if we've already imported the module, just remove the declaration
+      replacement = null;
     }
 
     return replacement;
