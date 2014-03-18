@@ -15,7 +15,7 @@ class Rewriter {
     this.moduleName = opts.moduleName;
     this.dirPath = opts.dirPath;  // used to resolve relative imports
 
-    this.ast = esprima.parse(src, {comments: true});
+    this.ast = recast.parse(src, {esprima: esprima});
 
     // a mapping of imported modules to their unique identifiers
     // i.e. `./a` -> `__import_0__`
@@ -76,7 +76,7 @@ class Rewriter {
 
     this.insertPreamble();
 
-    recast.types.traverse(this.ast, function(node) {
+    recast.types.traverse(this.ast.program, function(node) {
       var replacement;
       this.scope.scan();  // always track scope, otherwise things get weird
 
