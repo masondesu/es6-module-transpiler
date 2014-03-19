@@ -135,9 +135,18 @@ class Rewriter {
   }
 
   resolvePath(filename) {
-    if ( !this.dirPath ) {
+
+    var start = filename.substring(0, 2);
+    if (start !== './' && start !== '..') {
+      // non-relative paths are used as-is
       return filename;
     }
+
+    // Can't resolve path without a set dirPath, die to prevent footgunning
+    if ( !this.dirPath ) {
+      throw new Error('Can\'t resolve relative path without being passed a dirPath!');
+    }
+
     return path.join(this.dirPath, filename);
   }
 }
