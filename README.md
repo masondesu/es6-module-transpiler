@@ -54,7 +54,7 @@ OUTPUT
 
 TYPE
   One of `amd` (for AMD output), `cjs` (for CommonJS output), `yui` (for YUI
-  output).
+  output), `globals` (for global variable output).
 
 INFER-NAME
   If you use the --infer-name flag with the AMD or YUI type, the transpiler will
